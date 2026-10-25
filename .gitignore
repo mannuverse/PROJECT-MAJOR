@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.npm-cache/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.local
+/password
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
