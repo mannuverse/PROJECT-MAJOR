@@ -77,10 +77,9 @@ export function renderDashboardPage({
   const menu = element('details', 'workspace-menu');
   menu.open = true;
   const menuToggle = element('summary', 'workspace-menu-toggle');
-  menuToggle.append(element('span', '', 'Workspace'), element('span', 'workspace-menu-chevron', '⌄'));
+  menuToggle.append(element('span', '', 'Workspace'), element('span', 'workspace-menu-chevron'));
   menu.append(menuToggle);
   const nav = element('nav', 'workspace-nav');
-  nav.append(element('span', 'sidebar-label', 'WORKSPACE'));
   const overviewButton = makeButton('Overview', 'workspace-nav-item workspace-nav-active', () => onNavigate('overview'), pending);
   overviewButton.setAttribute('aria-current', 'page');
   const tasksButton = makeButton('My Tasks', 'workspace-nav-item', () => onNavigate('tasks'), pending);

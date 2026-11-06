@@ -317,8 +317,8 @@ export function renderWorkspacePage(props) {
   const shell = el('div', 'workspace-shell'); const sidebar = el('aside', 'workspace-sidebar');
   const brand = el('div', 'workspace-brand'); brand.append(el('span', 'brand-mark', 'F'), el('span', '', 'FlowDesk')); sidebar.append(brand);
   const menu = el('details', 'workspace-menu'); menu.open = true;
-  const menuToggle = el('summary', 'workspace-menu-toggle'); menuToggle.append(el('span', '', 'Workspace'), el('span', 'workspace-menu-chevron', '⌄')); menu.append(menuToggle);
-  const nav = el('nav', 'workspace-nav'); nav.append(el('span', 'sidebar-label', 'WORKSPACE'));
+  const menuToggle = el('summary', 'workspace-menu-toggle'); menuToggle.append(el('span', '', 'Workspace'), el('span', 'workspace-menu-chevron')); menu.append(menuToggle);
+  const nav = el('nav', 'workspace-nav');
   const routes = [['overview', 'Overview'], ['tasks', 'Tasks'], ['board', 'Kanban'], ['calendar', 'Calendar'], ['my-work', 'My Work'], ['projects', 'Projects'], ['reports', 'Reports']];
   for (const [route, label] of routes) {
     const item = button(label, 'workspace-nav-item' + (props.view === route ? ' workspace-nav-active' : ''), () => props.onNavigate(route));

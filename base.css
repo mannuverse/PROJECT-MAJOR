@@ -2547,7 +2547,7 @@ h3 {
 }
 
 .workspace-shell {
-  grid-template-columns: 206px minmax(0, 1fr);
+  grid-template-columns: 190px minmax(0, 1fr);
 }
 
 .workspace-sidebar {
@@ -2572,7 +2572,7 @@ h3 {
   border-radius: 9px;
   color: var(--color-sidebar-muted);
   cursor: pointer;
-  font-size: .68rem;
+  font-size: .72rem;
   font-weight: 750;
   letter-spacing: .12em;
   list-style: none;
@@ -2589,13 +2589,18 @@ h3 {
 }
 
 .workspace-menu-chevron {
-  font-size: 1rem;
-  letter-spacing: 0;
+  width: 7px;
+  height: 7px;
+  margin: -3px 2px 0 0;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
   transition: transform 140ms ease;
 }
 
 .workspace-menu[open] .workspace-menu-chevron {
-  transform: rotate(180deg);
+  margin-top: 4px;
+  transform: rotate(225deg);
 }
 
 .workspace-nav {
@@ -2719,6 +2724,13 @@ h3 {
   .workspace-sidebar .sidebar-note {
     display: none;
   }
+}
+
+.workspace-feature-page {
+  width: min(100%, 1500px);
+  margin: 0 auto;
+  padding: 26px clamp(24px, 3vw, 42px) 24px;
+  gap: .9rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

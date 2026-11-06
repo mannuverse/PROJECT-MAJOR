@@ -188,10 +188,9 @@ export function renderAdminPage({
   const menu = element('details', 'workspace-menu');
   menu.open = true;
   const menuToggle = element('summary', 'workspace-menu-toggle');
-  menuToggle.append(element('span', '', 'Workspace'), element('span', 'workspace-menu-chevron', '⌄'));
+  menuToggle.append(element('span', '', 'Workspace'), element('span', 'workspace-menu-chevron'));
   menu.append(menuToggle);
   const nav = element('nav', 'workspace-nav');
-  nav.append(element('span', 'sidebar-label', 'WORKSPACE'));
   const routes = [['overview', 'Overview'], ['tasks', 'My Tasks'], ['board', 'Kanban'], ['calendar', 'Calendar'], ['my-work', 'My Work'], ['projects', 'Projects'], ['reports', 'Reports']];
   for (const [route, label] of routes) nav.append(button(label, 'workspace-nav-item', () => onNavigate(route), pending));
   const adminNav = button('Admin', 'workspace-nav-item workspace-nav-active', () => onNavigate('admin'), pending);
