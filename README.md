@@ -79,7 +79,11 @@ The Admin navigation appears only for profiles whose database role is `admin`. T
 
 For an existing Supabase project, apply `supabase/stage6_admin_email.sql` in SQL Editor before opening the profile directory. It adds/backfills profile emails and keeps them synced after an Auth email change. Then use the trusted SQL procedure in `supabase/README.md` to promote the intended first administrator. New projects should apply the updated `supabase/schema.sql` and then can skip the migration.
 
-## Stage 7 team workspace\n\nProject owners add existing FlowDesk accounts using their email address. Project members share project tasks; personal tasks stay private. Tasks can be assigned, marked blocked, given deadlines and effort estimates, nested as subtasks, and linked with dependencies. Reports show status and priority counts, let you open the matching tasks, save filter views, and export visible tasks as CSV. Weekly capacity is measured against open assigned effort estimates. See [`supabase/README.md`](supabase/README.md) for the migration and RLS checks.\n\n## Current file structure
+## Stage 7 team workspace
+
+Project owners add existing FlowDesk accounts using their email address. Project members share project tasks; personal tasks stay private. Tasks can be assigned, marked blocked, given deadlines and effort estimates, nested as subtasks, and linked with dependencies. Reports show status and priority counts, let you open the matching tasks, save filter views, and export visible tasks as CSV. Weekly capacity is measured against open assigned effort estimates. See [`supabase/README.md`](supabase/README.md) for the migration and RLS checks.
+
+## Current file structure
 
 ```text
 .
