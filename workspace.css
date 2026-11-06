@@ -1,11 +1,11 @@
 :root {
-  --work-orange: #f78555;
-  --work-teal: #237f78;
+  --work-orange: #bd4f2d;
+  --work-teal: #17867c;
   --work-green: #4bc58f;
-  --work-ink: #292c32;
-  --work-muted: #686d74;
-  --work-border: #dad1d2;
-  --work-wash: #f4f1f0;
+  --work-ink: #25312e;
+  --work-muted: #687570;
+  --work-border: #e4e6df;
+  --work-wash: #f3f2ec;
 }
 
 .password-control { display: flex; align-items: stretch; position: relative; }
@@ -110,6 +110,175 @@
 .notification-row time { color: var(--work-muted); font-size: .67rem; }
 .notification-unread { border-left: 3px solid var(--work-orange); background: #fff4ee; }
 
+/* Consistent controls and denser, warmer surfaces for the expanded work views. */
+.work-field .field-label,
+.work-field > span {
+  display: block;
+  margin-bottom: .35rem;
+  color: #53615c;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+
+.work-field input,
+.work-field select,
+.work-field textarea,
+.work-form-grid input,
+.work-form-grid select,
+.work-form-grid textarea,
+.dependency-form select,
+.comment-form textarea,
+.saved-view-form input,
+.member-row input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #d9ded8;
+  border-radius: 10px;
+  padding: .58rem .7rem;
+  background-color: #fffefa;
+  color: var(--work-ink);
+  font: 500 .84rem 'DM Sans', sans-serif;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.work-field select,
+.work-form-grid select,
+.dependency-form select {
+  cursor: pointer;
+}
+
+.work-field select[multiple] {
+  padding: .38rem;
+}
+
+.work-field select[multiple] option {
+  padding: .35rem .45rem;
+  border-radius: 6px;
+}
+
+.work-field input:focus-visible,
+.work-field select:focus-visible,
+.work-field textarea:focus-visible,
+.work-form-grid input:focus-visible,
+.work-form-grid select:focus-visible,
+.work-form-grid textarea:focus-visible,
+.dependency-form select:focus-visible,
+.comment-form textarea:focus-visible,
+.saved-view-form input:focus-visible,
+.member-row input:focus-visible {
+  outline: 3px solid rgb(23 134 124 / 18%);
+  border-color: var(--work-teal);
+}
+
+.work-filters {
+  gap: .65rem;
+  padding: .8rem;
+  border-radius: 14px;
+}
+
+.work-task-card {
+  gap: .3rem .8rem;
+  padding: .8rem .9rem;
+  border-color: #e6e4dd;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgb(37 49 46 / 3%);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.work-task-card:hover {
+  transform: translateY(-1px);
+  border-color: #c9d8d2;
+  box-shadow: 0 9px 20px rgb(37 49 46 / 7%);
+}
+
+.work-task-title {
+  font-size: .93rem;
+  font-weight: 700;
+  letter-spacing: -.015em;
+}
+
+.advanced-editor,
+.project-create-form,
+.project-card,
+.workload-panel,
+.task-detail-panel,
+.report-chart,
+.saved-views-panel,
+.notifications-panel {
+  padding: .9rem;
+  border-radius: 14px;
+}
+
+.kanban-lane {
+  min-height: 225px;
+  border-color: #e4e2db;
+  border-radius: 13px;
+}
+
+.calendar-wrap { padding: .8rem; }
+.calendar-cell { min-height: 82px; }
+.calendar-header h2 { font-size: 1.9rem; }
+
+.calendar-task {
+  border-left-color: var(--work-orange);
+  background: #f9ede6;
+  color: #5c3b2f;
+}
+
+.project-card,
+.notification-row,
+.comment-item,
+.activity-item {
+  border: 1px solid #ebe9e2;
+  background: #fffefa;
+}
+
+.project-card-heading h2,
+.task-detail-heading h2,
+.discussion-column h3,
+.project-create-form h2,
+.workload-panel h2,
+.report-chart h2,
+.saved-views-panel h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.notification-unread {
+  border-left: 3px solid var(--work-orange);
+  background: #fff5ef;
+}
+
+@media (max-width: 620px) {
+  .work-filters { grid-template-columns: 1fr; }
+  .calendar-wrap { padding: .45rem; }
+  .calendar-cell { min-height: 58px; }
+  .calendar-day-number { font-size: .65rem; }
+  .advanced-editor { padding: .8rem; }
+}
+
+.kanban-lane .work-task-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.work-task-card .work-task-actions {
+  display: block;
+  grid-column: 1 / -1;
+  grid-row: auto;
+  justify-self: start;
+  align-self: start;
+}
+
+.work-task-action-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 7px;
+}
+
 @media (max-width: 900px) {
   .work-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -126,6 +295,6 @@
   .discussion-grid { grid-template-columns: 1fr; }
   .notification-row { grid-template-columns: 1fr auto; }
   .notification-row time { grid-row: 2; }
-  .work-filters { grid-template-columns: 1fr 1fr; }
+  .work-filters { grid-template-columns: 1fr; }
 }
 

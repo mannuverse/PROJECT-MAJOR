@@ -74,6 +74,11 @@ export function renderDashboardPage({
   brand.append(element('span', 'brand-mark', 'F'), element('span', '', 'FlowDesk'));
   sidebar.append(brand);
 
+  const menu = element('details', 'workspace-menu');
+  menu.open = true;
+  const menuToggle = element('summary', 'workspace-menu-toggle');
+  menuToggle.append(element('span', '', 'Workspace'), element('span', 'workspace-menu-chevron', '⌄'));
+  menu.append(menuToggle);
   const nav = element('nav', 'workspace-nav');
   nav.append(element('span', 'sidebar-label', 'WORKSPACE'));
   const overviewButton = makeButton('Overview', 'workspace-nav-item workspace-nav-active', () => onNavigate('overview'), pending);
@@ -86,7 +91,8 @@ export function renderDashboardPage({
   if (profile.role === 'admin') {
     nav.append(makeButton('Admin', 'workspace-nav-item', () => onNavigate('admin'), pending));
   }
-  sidebar.append(nav, element('p', 'sidebar-note', 'A clear view of your personal work.'));
+  menu.append(nav);
+  sidebar.append(menu, element('p', 'sidebar-note', 'A clear view of your personal work.'));
 
   const content = element('div', 'workspace-content');
   const topbar = element('header', 'workspace-topbar');

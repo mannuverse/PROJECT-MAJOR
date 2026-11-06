@@ -2192,10 +2192,13 @@ body {
 
 h1,
 h2,
-h3,
+h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
 .workspace-brand,
 .metric-value {
-  font-family: "Manrope", "DM Sans", "Segoe UI", sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
 }
 
 .app-shell:has(.auth-card) {
@@ -2363,7 +2366,7 @@ h3,
 }
 
 .section-title {
-  font-family: "Manrope", "DM Sans", "Segoe UI", sans-serif;
+  font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 700;
   letter-spacing: -0.035em;
 }
@@ -2516,6 +2519,208 @@ h3,
   color: #76551c;
 }
 
+/* Final dashboard refinements based on the current desktop view. */
+.dashboard-page {
+  padding-top: clamp(22px, 3vw, 38px);
+}
+
+.dashboard-heading {
+  margin-bottom: 21px;
+}
+
+.dashboard-page .page-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2.45rem, 4.4vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: .98;
+}
+
+.dashboard-page .metric-card {
+  min-height: 116px;
+  gap: 9px;
+  padding: 16px 18px;
+}
+
+.dashboard-page .metric-value {
+  font-size: 1.9rem;
+}
+
+.workspace-shell {
+  grid-template-columns: 206px minmax(0, 1fr);
+}
+
+.workspace-sidebar {
+  padding: 22px 14px;
+}
+
+.workspace-brand {
+  padding: 0 8px 22px;
+}
+
+.workspace-menu {
+  min-width: 0;
+}
+
+.workspace-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 7px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: var(--color-sidebar-muted);
+  cursor: pointer;
+  font-size: .68rem;
+  font-weight: 750;
+  letter-spacing: .12em;
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.workspace-menu-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.workspace-menu-toggle:hover {
+  background: rgb(255 255 255 / 7%);
+  color: #fff;
+}
+
+.workspace-menu-chevron {
+  font-size: 1rem;
+  letter-spacing: 0;
+  transition: transform 140ms ease;
+}
+
+.workspace-menu[open] .workspace-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.workspace-nav {
+  gap: 3px;
+}
+
+.workspace-nav-item {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: .88rem;
+}
+
+.work-task-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.work-task-actions {
+  display: block;
+  grid-column: 1 / -1;
+  grid-row: auto;
+  justify-self: start;
+  align-self: start;
+}
+
+.work-task-actions-toggle {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 5px 9px;
+  border: 1px solid #e3e4dc;
+  border-radius: 8px;
+  background: #fffefa;
+  color: #52615c;
+  cursor: pointer;
+  font-size: .72rem;
+  font-weight: 650;
+  list-style: none;
+}
+
+.work-task-actions-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.work-task-actions-toggle::after {
+  content: '⌄';
+  margin-left: 8px;
+}
+
+.work-task-actions[open] .work-task-actions-toggle::after {
+  transform: rotate(180deg);
+}
+
+.work-task-action-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 7px;
+}
+
+.work-task-done {
+  background: #f8faf7;
+}
+
+.work-task-done .work-task-title {
+  color: #687570;
+  text-decoration: line-through;
+  text-decoration-color: #9ba59f;
+  text-decoration-thickness: 1.5px;
+}
+
+.work-task-done .work-task-description {
+  color: #8a948f;
+}
+
+@media (max-width: 700px) {
+  .workspace-sidebar {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 14px;
+  }
+
+  .workspace-brand {
+    padding: 0;
+  }
+
+  .workspace-menu {
+    position: static;
+    flex: 1 1 auto;
+  }
+
+  .workspace-menu-toggle {
+    width: max-content;
+    margin: 0 0 0 auto;
+  }
+
+  .workspace-menu[open] .workspace-nav {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 7px);
+    right: 14px;
+    display: grid;
+    width: min(270px, calc(100vw - 28px));
+    padding: 9px;
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 12px;
+    background: var(--color-sidebar);
+    box-shadow: 0 16px 36px rgb(22 36 33 / 24%);
+  }
+
+  .workspace-menu[open] .workspace-nav .workspace-nav-item {
+    width: 100%;
+    text-align: left;
+  }
+
+  .workspace-menu .sidebar-label,
+  .workspace-sidebar .sidebar-note {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .button,
   .task-card {
@@ -2527,3 +2732,5 @@ h3,
     transform: none;
   }
 }
+
+

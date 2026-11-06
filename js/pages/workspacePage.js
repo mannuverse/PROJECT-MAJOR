@@ -55,7 +55,7 @@ function filteredTasks(tasks, filters, userId, view) {
 }
 
 function taskCard(task, props) {
-  const card = el('article', 'work-task-card');
+  const card = el('article', 'work-task-card' + (task.status === 'done' ? ' work-task-done' : ''));
   const title = button(task.title, 'work-task-title', () => props.onOpenTask(task));
   const meta = el('div', 'work-task-meta');
   meta.append(el('span', `task-status status-${task.status}`, statusNames[task.status] || task.status));
@@ -68,10 +68,13 @@ function taskCard(task, props) {
   card.append(title);
   if (task.description) card.append(el('p', 'work-task-description', task.description));
   card.append(meta, details);
-  const actions = el('div', 'work-task-actions');
-  actions.append(button('Details', 'button button-secondary button-small', () => props.onOpenTask(task), props.pending));
-  actions.append(button(task.status === 'done' ? 'Reopen' : 'Complete', 'button button-secondary button-small', () => props.onToggleComplete(task), props.pending));
-  actions.append(button('Delete', 'button button-danger button-small', () => props.onDelete(task), props.pending));
+  const actions = el('details', 'work-task-actions');
+  actions.append(el('summary', 'work-task-actions-toggle', 'Task options'));
+  const actionMenu = el('div', 'work-task-action-menu');
+  actionMenu.append(button('Details', 'button button-secondary button-small', () => props.onOpenTask(task), props.pending));
+  actionMenu.append(button(task.status === 'done' ? 'Reopen' : 'Complete', 'button button-secondary button-small', () => props.onToggleComplete(task), props.pending));
+  actionMenu.append(button('Delete', 'button button-danger button-small', () => props.onDelete(task), props.pending));
+  actions.append(actionMenu);
   card.append(actions); return card;
 }
 
@@ -313,6 +316,8 @@ function reportsPanel(props, items) {
 export function renderWorkspacePage(props) {
   const shell = el('div', 'workspace-shell'); const sidebar = el('aside', 'workspace-sidebar');
   const brand = el('div', 'workspace-brand'); brand.append(el('span', 'brand-mark', 'F'), el('span', '', 'FlowDesk')); sidebar.append(brand);
+  const menu = el('details', 'workspace-menu'); menu.open = true;
+  const menuToggle = el('summary', 'workspace-menu-toggle'); menuToggle.append(el('span', '', 'Workspace'), el('span', 'workspace-menu-chevron', '⌄')); menu.append(menuToggle);
   const nav = el('nav', 'workspace-nav'); nav.append(el('span', 'sidebar-label', 'WORKSPACE'));
   const routes = [['overview', 'Overview'], ['tasks', 'Tasks'], ['board', 'Kanban'], ['calendar', 'Calendar'], ['my-work', 'My Work'], ['projects', 'Projects'], ['reports', 'Reports']];
   for (const [route, label] of routes) {
@@ -322,7 +327,8 @@ export function renderWorkspacePage(props) {
   if (props.profile.role === 'admin') nav.append(button('Admin', 'workspace-nav-item', () => props.onNavigate('admin')));
   const unread = props.notifications.filter((notification) => !notification.read_at).length;
   nav.append(button(`Notifications${unread ? ` · ${unread}` : ''}`, 'workspace-nav-item', () => props.onToggleNotifications()));
-  sidebar.append(nav, el('p', 'sidebar-note', 'Projects, tasks, and team focus in one place.'));
+  menu.append(nav);
+  sidebar.append(menu, el('p', 'sidebar-note', 'Projects, tasks, and team focus in one place.'));
   const content = el('div', 'workspace-content'); const topbar = el('header', 'workspace-topbar');
   topbar.append(el('span', 'topbar-context', 'Team workspace'));
   const account = el('div', 'topbar-account'); const accountCopy = el('div', 'account-copy');

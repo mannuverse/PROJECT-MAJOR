@@ -185,16 +185,20 @@ export function renderAdminPage({
   const brand = element('div', 'workspace-brand');
   brand.append(element('span', 'brand-mark', 'F'), element('span', '', 'FlowDesk'));
   sidebar.append(brand);
+  const menu = element('details', 'workspace-menu');
+  menu.open = true;
+  const menuToggle = element('summary', 'workspace-menu-toggle');
+  menuToggle.append(element('span', '', 'Workspace'), element('span', 'workspace-menu-chevron', '⌄'));
+  menu.append(menuToggle);
   const nav = element('nav', 'workspace-nav');
   nav.append(element('span', 'sidebar-label', 'WORKSPACE'));
-  nav.append(
-    button('Overview', 'workspace-nav-item', () => onNavigate('overview'), pending),
-    button('My Tasks', 'workspace-nav-item', () => onNavigate('tasks'), pending)
-  );
+  const routes = [['overview', 'Overview'], ['tasks', 'My Tasks'], ['board', 'Kanban'], ['calendar', 'Calendar'], ['my-work', 'My Work'], ['projects', 'Projects'], ['reports', 'Reports']];
+  for (const [route, label] of routes) nav.append(button(label, 'workspace-nav-item', () => onNavigate(route), pending));
   const adminNav = button('Admin', 'workspace-nav-item workspace-nav-active', () => onNavigate('admin'), pending);
   adminNav.setAttribute('aria-current', 'page');
   nav.append(adminNav);
-  sidebar.append(nav, element('p', 'sidebar-note', 'Read-only administration and session history.'));
+  menu.append(nav);
+  sidebar.append(menu, element('p', 'sidebar-note', 'Read-only administration and session history.'));
 
   const content = element('div', 'workspace-content');
   const topbar = element('header', 'workspace-topbar');
@@ -338,3 +342,4 @@ export function renderAdminPage({
   shell.append(sidebar, content);
   return shell;
 }
+

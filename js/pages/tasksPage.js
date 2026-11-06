@@ -122,6 +122,11 @@ export function renderTasksPage({
   const brand = element('div', 'workspace-brand');
   brand.append(element('span', 'brand-mark', 'F'), element('span', '', 'FlowDesk'));
   sidebar.append(brand);
+  const menu = element('details', 'workspace-menu');
+  menu.open = true;
+  const menuToggle = element('summary', 'workspace-menu-toggle');
+  menuToggle.append(element('span', '', 'Workspace'), element('span', 'workspace-menu-chevron', '⌄'));
+  menu.append(menuToggle);
   const nav = element('nav', 'workspace-nav');
   nav.append(element('span', 'sidebar-label', 'WORKSPACE'));
   const overviewButton = makeButton('Overview', 'workspace-nav-item', () => onNavigate('overview'), pending);
@@ -134,7 +139,8 @@ export function renderTasksPage({
   if (profile.role === 'admin') {
     nav.append(makeButton('Admin', 'workspace-nav-item', () => onNavigate('admin'), pending));
   }
-  sidebar.append(nav, element('p', 'sidebar-note', 'Private tasks, saved to your FlowDesk account.'));
+  menu.append(nav);
+  sidebar.append(menu, element('p', 'sidebar-note', 'Private tasks, saved to your FlowDesk account.'));
 
   const content = element('div', 'workspace-content');
   const topbar = element('header', 'workspace-topbar');
