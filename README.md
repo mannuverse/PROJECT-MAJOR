@@ -4,7 +4,7 @@ FlowDesk is a student project for organizing personal tasks and presenting a cle
 
 ## Current stage
 
-The app implements Supabase authentication, personal tasks, dashboard summaries, session tracking, admin views, and a team workspace with projects, assignments, Kanban and calendar views, subtasks, dependencies, comments and mentions, notifications, activity history, capacity tracking, saved report views, and CSV export. Apply `supabase/stage7_team_features.sql` before deploying the updated frontend. The login and password forms include a show/hide password control.
+The app implements Supabase authentication, personal tasks, dashboard summaries, session tracking, admin views, and a team workspace with projects, assignments, Kanban and calendar views, subtasks, dependencies, comments and mentions, notifications, activity history, capacity tracking, saved report views, and CSV export. Apply both Stage 7 SQL files before deploying the updated frontend. The login and password forms include a show/hide password control.
 
 For a detailed walkthrough of the architecture, JavaScript, database, security, deployment, troubleshooting, and a guided study plan, read [Learn FlowDesk](LEARN_FLOWDESK.md).
 

@@ -383,7 +383,7 @@ Workload compares open tasks' `effort_hours` with each project member's `capacit
 
 ### Applying the Stage 7 migration
 
-The deployed Supabase project already has the earlier schema and Stage 6 email migration, so apply `supabase/stage7_team_features.sql` once in the Supabase SQL Editor. Paste the contents of that file into the editor and run it; do not enter only its filename. Verify the seven new tables all report `rowsecurity = true` using the query in `supabase/README.md`. Apply the migration before deploying the Stage 7 JavaScript, because the task query uses the additional columns.
+The deployed Supabase project already has the earlier schema and Stage 6 email migration, so apply `supabase/stage7_team_features.sql` followed by `supabase/stage7_security_tuning.sql` in the Supabase SQL Editor. Paste each file's contents into the editor and run it; do not enter only its filename. Verify the seven new tables all report `rowsecurity = true` using the query in `supabase/README.md`. Apply both migrations before deploying the Stage 7 JavaScript, because the task query uses the additional columns.
 
 ### Password visibility
 

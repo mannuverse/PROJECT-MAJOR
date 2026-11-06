@@ -25,9 +25,9 @@
 
 ## Stage 7 team workspace migration
 
-For the existing FlowDesk project, run `supabase/stage7_team_features.sql` once in the SQL Editor after the base schema and Stage 6 email migration. It adds projects and project memberships, task assignment/subtask/effort/blocker fields, dependencies, comments, activity, notifications, saved views, and the policies and RPCs used by the app. Run the full SQL file, not just its filename.
+For the existing FlowDesk project, apply `supabase/stage7_team_features.sql` and then `supabase/stage7_security_tuning.sql` after the base schema and Stage 6 email migration. Together they add projects and project memberships, task assignment/subtask/effort/blocker fields, dependencies, comments, activity, notifications, saved views, and the policies and RPCs used by the app. Run the full SQL files, not just their filenames.
 
-Apply this migration **before deploying the Stage 7 frontend**. The updated task query expects the new task columns. For a fresh database, apply `schema.sql`, then this Stage 7 migration.
+Apply both migrations **before deploying the Stage 7 frontend**. The updated task query expects the new task columns. For a fresh database, apply `schema.sql`, then both Stage 7 files in order. Internal access-check helpers are placed in a non-exposed `private` schema; the signed-in app-facing RPCs remain in `public`.
 
 Confirm that all new tables have RLS enabled:
 
