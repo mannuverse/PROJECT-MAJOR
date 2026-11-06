@@ -84,14 +84,31 @@ function taskEditor(props) {
   const form = document.createElement('form'); form.className = 'work-form-grid';
   form.addEventListener('submit', (event) => { event.preventDefault(); void props.onSaveTask(new FormData(form)); });
   form.append(labeledInput('Title', 'title', 'text', props.formValues.title ?? props.editingTask?.title, { required: true, maxLength: 180, placeholder: 'What needs to get done?', focusKey: 'task-title' }));
-  form.append(labeledInput('Project', 'project_id', 'text', props.formValues.project_id ?? props.editingTask?.project_id, { options: [['', 'Personal task'], ...props.projects.map((project) => [project.id, project.name])] }));
-  form.append(labeledInput('Assignee', 'assignee_id', 'text', props.formValues.assignee_id ?? props.editingTask?.assignee_id, { options: [['', 'Unassigned'], ...props.members.map((member) => [member.user_id, member.full_name || member.email])] }));
+  const projectField = labeledInput('Project', 'project_id', 'text', props.formValues.project_id ?? props.editingTask?.project_id, { options: [['', 'Personal task'], ...props.projects.map((project) => [project.id, project.name])] });
+  const assigneeField = labeledInput('Assignee', 'assignee_id', 'text', props.formValues.assignee_id ?? props.editingTask?.assignee_id, { options: [['', 'Unassigned'], ...props.members.map((member) => [member.user_id, member.full_name || member.email])] });
+  const parentField = labeledInput('Parent task', 'parent_task_id', 'text', props.formValues.parent_task_id ?? props.editingTask?.parent_task_id, { options: [['', 'No parent'], ...props.tasks.filter((task) => task.id !== props.editingTask?.id && task.project_id === (props.formValues.project_id ?? props.editingTask?.project_id ?? null)).map((task) => [task.id, task.title])] });
+  projectField.querySelector('select').addEventListener('change', (event) => {
+    const projectId = event.currentTarget.value;
+    const assignee = assigneeField.querySelector('select'); const parent = parentField.querySelector('select');
+    const oldAssignee = assignee.value; const oldParent = parent.value;
+    const availableMembers = props.membersByProject[projectId] || [];
+    assignee.replaceChildren(el('option', '', 'Unassigned'));
+    assignee.firstChild.value = '';
+    for (const member of availableMembers) { const option = el('option', '', member.full_name || member.email); option.value = member.user_id; assignee.append(option); }
+    if (availableMembers.some((member) => member.user_id === oldAssignee)) assignee.value = oldAssignee;
+    const availableParents = props.tasks.filter((task) => task.id !== props.editingTask?.id && task.project_id === (projectId || null));
+    parent.replaceChildren(el('option', '', 'No parent')); parent.firstChild.value = '';
+    for (const task of availableParents) { const option = el('option', '', task.title); option.value = task.id; parent.append(option); }
+    if (availableParents.some((task) => task.id === oldParent)) parent.value = oldParent;
+  });
+  projectField.querySelector('select').dispatchEvent(new Event('change'));
+  form.append(projectField, assigneeField);
   form.append(labeledInput('Category', 'category', 'text', props.formValues.category ?? props.editingTask?.category, { maxLength: 80, placeholder: 'Optional label' }));
   form.append(labeledInput('Status', 'status', 'text', props.formValues.status ?? props.editingTask?.status ?? 'todo', { options: Object.entries(statusNames) }));
   form.append(labeledInput('Priority', 'priority', 'text', props.formValues.priority ?? props.editingTask?.priority ?? 'medium', { options: Object.entries(priorityNames) }));
   form.append(labeledInput('Deadline', 'due_date', 'date', props.formValues.due_date ?? props.editingTask?.due_date));
   form.append(labeledInput('Effort (hours)', 'effort_hours', 'number', props.formValues.effort_hours ?? props.editingTask?.effort_hours ?? 1));
-  form.append(labeledInput('Parent task', 'parent_task_id', 'text', props.formValues.parent_task_id ?? props.editingTask?.parent_task_id, { options: [['', 'No parent'], ...props.tasks.filter((task) => task.id !== props.editingTask?.id).map((task) => [task.id, task.title])] }));
+  form.append(parentField);
   const activeDependencies = props.editingTask?.id === props.selectedTask?.id ? props.discussion.dependencies.map((item) => item.depends_on_task_id) : [];
   form.append(labeledInput('Depends on', 'dependencies', 'text', '', { multiple: true, selectedValues: activeDependencies, options: props.tasks.filter((task) => task.id !== props.editingTask?.id).map((task) => [task.id, task.title]) }));
   const description = labeledInput('Description', 'description', 'text', props.formValues.description ?? props.editingTask?.description ?? '', { placeholder: 'Add useful context.', maxLength: 2000 });
@@ -214,6 +231,11 @@ function projectPanel(props) {
   section.append(list);
   const workload = el('section', 'surface workload-panel'); workload.append(el('p', 'section-kicker', 'CAPACITY'), el('h2', 'section-title', 'Assigned effort vs. availability'));
   const activeProject = props.projects.find((project) => project.id === props.filters.project_id) || props.projects[0];
+  if (props.projects.length) {
+    const picker = labeledInput('Project', 'capacity_project', 'text', activeProject?.id || '', { options: props.projects.map((project) => [project.id, project.name]) });
+    picker.querySelector('select').addEventListener('change', (event) => props.onFiltersChange({ ...props.filters, project_id: event.currentTarget.value }));
+    workload.append(picker);
+  }
   const people = activeProject ? (props.membersByProject[activeProject.id] || []) : [];
   if (!people.length) workload.append(el('p', 'dashboard-empty-note', 'Create a project and add team members to track workload.'));
   for (const person of people) {
