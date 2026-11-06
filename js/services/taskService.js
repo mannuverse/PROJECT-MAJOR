@@ -10,7 +10,7 @@ function requireSupabase() {
 export async function listTasks() {
   const { data, error } = await requireSupabase()
     .from('tasks')
-    .select('id, user_id, title, description, status, priority, due_date, category, created_at, updated_at, completed_at')
+    .select('id, user_id, project_id, assignee_id, parent_task_id, effort_hours, blocked_reason, title, description, status, priority, due_date, category, created_at, updated_at, completed_at')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -52,3 +52,5 @@ export async function deleteTask(taskId) {
   if (error) throw error;
   if (!data) throw new Error('That task could not be found. Refresh the list and try again.');
 }
+
+

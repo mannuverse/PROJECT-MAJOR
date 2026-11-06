@@ -50,6 +50,37 @@ function addField(form, { id, name, labelText, type, autocomplete, required, min
   return input;
 }
 
+function addPasswordField(form, { id, name, labelText, autocomplete, required, minLength, maxLength }) {
+  const field = element('div', 'form-field');
+  const label = element('label', '', labelText);
+  label.htmlFor = id;
+  const control = element('div', 'password-control');
+  const input = document.createElement('input');
+  input.id = id;
+  input.name = name;
+  input.type = 'password';
+  input.autocomplete = autocomplete;
+  input.required = required;
+  if (minLength) input.minLength = minLength;
+  if (maxLength) input.maxLength = maxLength;
+  const toggle = element('button', 'password-toggle', 'Show');
+  toggle.type = 'button';
+  toggle.setAttribute('aria-label', 'Show password');
+  toggle.setAttribute('aria-pressed', 'false');
+  toggle.addEventListener('click', () => {
+    const visible = input.type === 'password';
+    input.type = visible ? 'text' : 'password';
+    toggle.textContent = visible ? 'Hide' : 'Show';
+    toggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+    toggle.setAttribute('aria-pressed', String(visible));
+    input.focus();
+  });
+  control.append(input, toggle);
+  field.append(label, control);
+  form.append(field);
+  return input;
+}
+
 function addModeButton(container, label, mode, onModeChange, pending) {
   const button = element('button', 'text-button', label);
   button.type = 'button';
@@ -91,14 +122,15 @@ export function renderAuthPage({ mode, feedback, pending, onModeChange, onSubmit
   }
 
   if (mode === 'signIn' || mode === 'signUp' || mode === 'updatePassword') {
-    const password = addField(form, {
+    const passwordOptions = {
       id: 'password', name: 'password', labelText: mode === 'signIn' ? 'Password' : 'New password',
-      type: 'password', autocomplete: mode === 'signIn' ? 'current-password' : 'new-password',
+      autocomplete: mode === 'signIn' ? 'current-password' : 'new-password',
       required: true, minLength: mode === 'signIn' ? undefined : 8, maxLength: 128,
-    });
+    };
+    const password = addPasswordField(form, passwordOptions);
 
     if (mode === 'updatePassword') {
-      const confirmation = addField(form, {
+      const confirmation = addPasswordField(form, {
         id: 'confirm-password', name: 'confirmPassword', labelText: 'Confirm new password',
         type: 'password', autocomplete: 'new-password', required: true, minLength: 8, maxLength: 128,
       });
@@ -143,3 +175,5 @@ export function renderAuthPage({ mode, feedback, pending, onModeChange, onSubmit
   panel.append(element('footer', 'auth-footer', 'FlowDesk · Team Productivity Dashboard'));
   return panel;
 }
+
+

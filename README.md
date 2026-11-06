@@ -4,7 +4,7 @@ FlowDesk is a student project for organizing personal tasks and presenting a cle
 
 ## Current stage
 
-The app implements the foundation, Supabase schema and RLS, authentication, personal task management, a data-backed dashboard, best-effort session tracking, and read-only admin views. Production verification and GitHub/Vercel deployment are still pending. A calendar, habit tracker, and Pomodoro timer are not implemented.
+The app implements Supabase authentication, personal tasks, dashboard summaries, session tracking, admin views, and a team workspace with projects, assignments, Kanban and calendar views, subtasks, dependencies, comments and mentions, notifications, activity history, capacity tracking, saved report views, and CSV export. Apply `supabase/stage7_team_features.sql` before deploying the updated frontend. The login and password forms include a show/hide password control.
 
 For a detailed walkthrough of the architecture, JavaScript, database, security, deployment, troubleshooting, and a guided study plan, read [Learn FlowDesk](LEARN_FLOWDESK.md).
 
@@ -79,7 +79,7 @@ The Admin navigation appears only for profiles whose database role is `admin`. T
 
 For an existing Supabase project, apply `supabase/stage6_admin_email.sql` in SQL Editor before opening the profile directory. It adds/backfills profile emails and keeps them synced after an Auth email change. Then use the trusted SQL procedure in `supabase/README.md` to promote the intended first administrator. New projects should apply the updated `supabase/schema.sql` and then can skip the migration.
 
-## Current file structure
+## Stage 7 team workspace\n\nProject owners add existing FlowDesk accounts using their email address. Project members share project tasks; personal tasks stay private. Tasks can be assigned, marked blocked, given deadlines and effort estimates, nested as subtasks, and linked with dependencies. Reports show status and priority counts, let you open the matching tasks, save filter views, and export visible tasks as CSV. Weekly capacity is measured against open assigned effort estimates. See [`supabase/README.md`](supabase/README.md) for the migration and RLS checks.\n\n## Current file structure
 
 ```text
 .
@@ -125,3 +125,5 @@ The planned deployment target is Vercel using the Vite preset, `npm run build`, 
 ## Screenshots and future improvements
 
 Screenshots will be added after the working dashboard is implemented. Planned work begins with PostgreSQL schema and Row Level Security, then authentication, personal task management, dashboard summaries, session history, and admin access. Optional features will wait until the required features are verified.
+
+

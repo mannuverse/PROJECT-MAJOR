@@ -367,3 +367,26 @@ Learn the project in this order:
 - **Trigger:** a database function automatically run after an insert/update or before an update.
 - **Vite:** the development server and build tool used for this frontend.
 - **Environment variable:** a setting provided outside source code, such as a project URL.
+
+
+## Stage 7: team workspace and reporting
+
+The current frontend adds a project layer around tasks. A project owner can add an existing FlowDesk account by exact email. The `projects` table stores project metadata, while `project_members` grants those members access to that project's tasks. A task with no project remains personal. Supabase Row Level Security remains the source of truth for what an account can read or change.
+
+The `tasks` table gains `project_id`, `assignee_id`, `parent_task_id`, `effort_hours`, and `blocked_reason`. Status now includes `blocked`. `task_dependencies` stores prerequisite task links, with a database trigger that prevents dependency cycles. Task records continue to store owner, title, description, priority, due date, category, and completion time.
+
+`js/services/workspaceService.js` contains the Supabase operations for projects, member lists, capacity, dependencies, comments, notifications, and saved views. `js/pages/workspacePage.js` renders the additional views: task list, Kanban lanes, month calendar, My Work, project roster, workload, and reports. `main.js` owns the active route, filters, task editor, and event handlers, following the same state-and-render pattern used by the existing pages.
+
+A task comment is created through the `create_task_comment` database function. The function checks that the caller can access the task, stores the comment, and creates notifications only for mentioned project members. Database triggers create task activity records and notify a newly assigned teammate. Notifications are in-app only; email notifications are not implemented. The activity log records task creation, status changes, assignment, key edits, and comments.
+
+Workload compares open tasks' `effort_hours` with each project member's `capacity_hours` per week. It is a planning estimate, not a time tracker. Reports calculate task counts from the user's loaded task rows; chart bars open the matching filtered task list. Saved views store the current filters in `saved_views`. CSV export downloads only the task rows currently visible through the filters.
+
+### Applying the Stage 7 migration
+
+The deployed Supabase project already has the earlier schema and Stage 6 email migration, so apply `supabase/stage7_team_features.sql` once in the Supabase SQL Editor. Paste the contents of that file into the editor and run it; do not enter only its filename. Verify the seven new tables all report `rowsecurity = true` using the query in `supabase/README.md`. Apply the migration before deploying the Stage 7 JavaScript, because the task query uses the additional columns.
+
+### Password visibility
+
+The auth page builds password fields in `js/pages/authPage.js`. The show/hide button changes only the input's `type`, label, and accessible pressed state. It does not change or submit the password separately. It is included on sign-in, sign-up, and password update forms.
+
+

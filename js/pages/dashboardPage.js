@@ -80,6 +80,9 @@ export function renderDashboardPage({
   overviewButton.setAttribute('aria-current', 'page');
   const tasksButton = makeButton('My Tasks', 'workspace-nav-item', () => onNavigate('tasks'), pending);
   nav.append(overviewButton, tasksButton);
+  for (const [route, label] of [['board', 'Kanban'], ['calendar', 'Calendar'], ['my-work', 'My Work'], ['projects', 'Projects'], ['reports', 'Reports']]) {
+    nav.append(makeButton(label, 'workspace-nav-item', () => onNavigate(route), pending));
+  }
   if (profile.role === 'admin') {
     nav.append(makeButton('Admin', 'workspace-nav-item', () => onNavigate('admin'), pending));
   }
@@ -137,6 +140,8 @@ export function renderDashboardPage({
     const dueToday = tasks.filter((task) => task.due_date === today);
     const inProgress = tasks.filter((task) => task.status === 'in_progress');
     const completed = tasks.filter((task) => task.status === 'done');
+    const blocked = tasks.filter((task) => task.status === 'blocked');
+    const unassigned = tasks.filter((task) => task.project_id && !task.assignee_id && task.status !== 'done');
     const overdue = tasks.filter((task) => task.status !== 'done' && task.due_date && task.due_date < today);
     const todayTasks = dueToday.sort((left, right) => left.created_at.localeCompare(right.created_at));
     const upcoming = tasks
@@ -150,7 +155,9 @@ export function renderDashboardPage({
       renderMetric('Due today', dueToday.length, 'Tasks with today’s due date', 'blue'),
       renderMetric('In progress', inProgress.length, 'Currently being worked on', 'violet'),
       renderMetric('Completed', completed.length, 'Completed tasks', 'green'),
-      renderMetric('Overdue', overdue.length, 'Unfinished past-due tasks', 'rose')
+      renderMetric('Overdue', overdue.length, 'Unfinished past-due tasks', 'rose'),
+      renderMetric('Blocked', blocked.length, 'Waiting on a blocker', 'orange'),
+      renderMetric('Unassigned', unassigned.length, 'Open tasks without an owner', 'teal')
     );
     page.append(metrics);
 
@@ -212,3 +219,5 @@ export function renderDashboardPage({
   shell.append(sidebar, content);
   return shell;
 }
+
+

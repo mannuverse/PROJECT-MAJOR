@@ -128,6 +128,9 @@ export function renderTasksPage({
   const tasksButton = makeButton('My Tasks', 'workspace-nav-item workspace-nav-active', () => onNavigate('tasks'), pending);
   tasksButton.setAttribute('aria-current', 'page');
   nav.append(overviewButton, tasksButton);
+  for (const [route, label] of [['board', 'Kanban'], ['calendar', 'Calendar'], ['my-work', 'My Work'], ['projects', 'Projects'], ['reports', 'Reports']]) {
+    nav.append(makeButton(label, 'workspace-nav-item', () => onNavigate(route), pending));
+  }
   if (profile.role === 'admin') {
     nav.append(makeButton('Admin', 'workspace-nav-item', () => onNavigate('admin'), pending));
   }
@@ -311,3 +314,5 @@ export function renderTasksPage({
   shell.append(sidebar, content);
   return shell;
 }
+
+

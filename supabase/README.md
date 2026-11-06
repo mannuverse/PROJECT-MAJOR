@@ -23,6 +23,24 @@
    order by tablename, policyname;
    ```
 
+## Stage 7 team workspace migration
+
+For the existing FlowDesk project, run `supabase/stage7_team_features.sql` once in the SQL Editor after the base schema and Stage 6 email migration. It adds projects and project memberships, task assignment/subtask/effort/blocker fields, dependencies, comments, activity, notifications, saved views, and the policies and RPCs used by the app. Run the full SQL file, not just its filename.
+
+Apply this migration **before deploying the Stage 7 frontend**. The updated task query expects the new task columns. For a fresh database, apply `schema.sql`, then this Stage 7 migration.
+
+Confirm that all new tables have RLS enabled:
+
+```sql
+select tablename, rowsecurity
+from pg_tables
+where schemaname = 'public'
+  and tablename in ('projects', 'project_members', 'task_dependencies', 'task_comments', 'task_activity', 'notifications', 'saved_views')
+order by tablename;
+```
+
+Every row should show `true`. Project owners add existing FlowDesk accounts by exact email. Membership grants access to tasks in that project; project members can update task work, but only the project owner can add members. Owners or members can adjust weekly capacity. Comments mentioning a teammate create an in-app notification. There is no email notification service in this stage.
+
 Running these inspection queries as the project owner confirms the schema and policies are installed; it does **not** simulate a regular user's access. Test row isolation later through authenticated clients using two separate accounts.
 
 ## Stage 6 profile email migration
@@ -57,3 +75,5 @@ The admin-check function is `SECURITY DEFINER` to avoid recursively invoking the
 ## Stage 2 verification boundary
 
 The schema was applied to the Supabase project on 2026-10-25. The dashboard inspection query returned `rowsecurity = true` for `profiles`, `tasks`, and `user_sessions`, and the policy query returned the expected eight policies. Those checks confirm installation, but do not simulate a regular user's access. Owner/non-owner data isolation must still be verified through authenticated sessions before treating the database security stage as fully tested.
+
+

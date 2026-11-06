@@ -1,4 +1,5 @@
 import './base.css';
+import './workspace.css';
 import { supabaseConfigured } from './js/config.js';
 import { supabase, supabaseClientError } from './js/lib/supabaseClient.js';
 import {
@@ -13,9 +14,15 @@ import { renderAuthPage } from './js/pages/authPage.js';
 import { renderAdminPage } from './js/pages/adminPage.js';
 import { renderDashboardPage } from './js/pages/dashboardPage.js';
 import { renderTasksPage } from './js/pages/tasksPage.js';
+import { renderWorkspacePage } from './js/pages/workspacePage.js';
 import { loadAdminData as fetchAdminData } from './js/services/adminService.js';
 import { clearUserSessionPointer, closeUserSession, startUserSession, touchUserSession } from './js/services/sessionService.js';
 import { createTask, deleteTask, listTasks, updateTask } from './js/services/taskService.js';
+import {
+  addProjectMember, addTaskComment, createProject, deleteSavedView, listNotifications,
+  listProjectMembers, listProjects, listSavedViews, listTaskDependencies, listTaskDiscussion,
+  markNotificationRead, saveView as persistSavedView, setTaskDependencies, updateMemberCapacity,
+} from './js/services/workspaceService.js';
 
 const app = document.querySelector('#app');
 
@@ -77,6 +84,22 @@ let adminFilters = {
   profileSearch: '', profileRole: 'all', profilePage: 1,
   sessionUser: 'all', sessionFrom: '', sessionTo: '', sessionPage: 1,
 };
+let projects = [];
+let membersByProject = {};
+let members = [];
+let profileById = {};
+let notifications = [];
+let savedViews = [];
+let dependencies = [];
+let workspaceFilters = { search: '', project_id: '', assignee_id: '', status: '', priority: '', from: '', to: '' };
+let workspaceEditorOpen = false;
+let selectedTask = null;
+let taskDiscussion = { comments: [], activity: [], dependencies: [] };
+let workspaceBusy = false;
+let notificationsOpen = false;
+const localCalendarNow = new Date();
+let calendarMonth = `${localCalendarNow.getFullYear()}-${String(localCalendarNow.getMonth() + 1).padStart(2, '0')}`;
+let workspaceError = null;
 
 function renderConfigurationError() {
   const panel = element('main', 'welcome-panel auth-card');
@@ -215,6 +238,56 @@ function render() {
       }));
     } else if (currentView === 'overview') {
       replaceAppContent(renderDashboardPage({ ...pageProps, onRetry: () => void loadTasks() }));
+    } else if (['tasks', 'board', 'calendar', 'my-work', 'projects', 'reports'].includes(currentView)) {
+      const membersFlat = Object.values(membersByProject).flat();
+      const uniqueMembers = [...new Map(membersFlat.map((member) => [member.user_id, member])).values()];
+      const visibleTasks = tasks.filter((task) => {
+        const query = workspaceFilters.search.trim().toLocaleLowerCase();
+        if (currentView === 'my-work' && task.assignee_id !== session.user.id && task.user_id !== session.user.id) return false;
+        if (workspaceFilters.project_id && task.project_id !== workspaceFilters.project_id) return false;
+        if (workspaceFilters.assignee_id && task.assignee_id !== workspaceFilters.assignee_id) return false;
+        if (workspaceFilters.status && task.status !== workspaceFilters.status) return false;
+        if (workspaceFilters.priority && task.priority !== workspaceFilters.priority) return false;
+        if (workspaceFilters.from && (!task.due_date || task.due_date < workspaceFilters.from)) return false;
+        if (workspaceFilters.to && (!task.due_date || task.due_date > workspaceFilters.to)) return false;
+        return !query || (task.title + ' ' + task.description + ' ' + (task.category || '')).toLocaleLowerCase().includes(query);
+      });
+      const projectMembers = membersByProject[workspaceFilters.project_id] || uniqueMembers;
+      replaceAppContent(renderWorkspacePage({
+        profile, email: session.user.email || '', tasks, visibleTasks, projects, members: projectMembers,
+        loading: tasksLoading, error: tasksError,
+        membersByProject, profileById, notifications, savedViews, dependencies, workspaceError,
+        projectById: Object.fromEntries(projects.map((project) => [project.id, project])),
+        view: currentView, filters: workspaceFilters, calendarMonth, notificationsOpen,
+        selectedTask, discussion: taskDiscussion, showEditor: workspaceEditorOpen,
+        editingTask: tasks.find((task) => task.id === editingTaskId) || null, formValues: taskDraft,
+        feedback: taskFeedback, activityNotice, pending: taskPending || workspaceBusy || pending,
+        onNavigate: handleNavigate,
+        onRetry: () => void loadTasks(),
+        onSignOut: handleSignOut,
+        onFiltersChange: (filters) => { workspaceFilters = filters; render(); },
+        onNewTask: () => { workspaceEditorOpen = true; editingTaskId = null; taskDraft = {}; taskFeedback = null; render(); },
+        onSaveTask: handleAdvancedTaskSave,
+        onCancelEdit: () => { workspaceEditorOpen = false; editingTaskId = null; taskDraft = {}; render(); },
+        onEditTask: (task) => { editingTaskId = task.id; taskDraft = {}; taskFeedback = null; workspaceEditorOpen = true; selectedTask = task; currentView = 'tasks'; render(); document.querySelector('[data-focus-key="task-title"]')?.focus(); },
+        onToggleComplete: handleToggleComplete,
+        onDelete: handleDeleteTask,
+        onOpenTask: openTaskDetail,
+        onCloseTask: () => { selectedTask = null; render(); },
+        onCreateProject: handleCreateProject,
+        onAddMember: handleAddProjectMember,
+        onCapacityChange: handleCapacityChange,
+        onSaveDependencies: handleSaveDependencies,
+        onAddComment: handleAddComment,
+        onMarkRead: handleMarkNotificationRead,
+        onToggleNotifications: () => { notificationsOpen = !notificationsOpen; render(); },
+        onMonthChange: (date) => { calendarMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; render(); },
+        onSaveView: handleSaveView,
+        onApplyView: (view) => { workspaceFilters = { ...workspaceFilters, ...view.filters }; currentView = 'tasks'; render(); },
+        onDeleteView: handleDeleteSavedView,
+        onChartFilter: (field, value) => { workspaceFilters = { ...workspaceFilters, [field]: value }; currentView = 'tasks'; render(); },
+        onExport: () => exportTasksCsv(visibleTasks),
+      }));
     } else {
       replaceAppContent(renderTasksPage(pageProps));
     }
@@ -254,6 +327,10 @@ async function setSession(nextSession) {
     profileSearch: '', profileRole: 'all', profilePage: 1,
     sessionUser: 'all', sessionFrom: '', sessionTo: '', sessionPage: 1,
   };
+  projects = []; membersByProject = {}; members = []; profileById = {}; notifications = []; savedViews = []; dependencies = [];
+  workspaceFilters = { search: '', project_id: '', assignee_id: '', status: '', priority: '', from: '', to: '' };
+  workspaceEditorOpen = false; selectedTask = null; taskDiscussion = { comments: [], activity: [], dependencies: [] };
+  workspaceBusy = false; notificationsOpen = false; workspaceError = null;
 
   if (nextSession?.user && !passwordRecovery) {
     void ensureSessionTracking(nextSession.user.id, currentRevision);
@@ -302,6 +379,11 @@ async function setSession(nextSession) {
         render();
       }
     }
+    if (currentRevision === sessionRevision) {
+      try { await loadWorkspaceData(); }
+      catch (error) { workspaceError = error instanceof Error ? error.message : 'Team workspace data could not be loaded.'; }
+      render();
+    }
     return;
   }
   render();
@@ -324,11 +406,13 @@ function handleNavigate(view) {
     void loadAdminData();
     return;
   }
-  currentView = view === 'create' || view === 'tasks' ? 'tasks' : 'overview';
+  const routes = ['tasks', 'board', 'calendar', 'my-work', 'projects', 'reports'];
+  currentView = view === 'create' ? 'tasks' : routes.includes(view) ? view : 'overview';
   if (view === 'create') {
     editingTaskId = null;
     taskDraft = {};
     taskFeedback = null;
+    workspaceEditorOpen = true;
   }
   render();
   if (view === 'create') document.querySelector('[data-focus-key="task-title"]')?.focus();
@@ -358,6 +442,149 @@ async function loadAdminData() {
     adminLoading = false;
     render();
   }
+}
+
+async function loadWorkspaceData() {
+  const [nextProjects, nextNotifications, nextViews, nextDependencies] = await Promise.all([
+    listProjects(), listNotifications(), listSavedViews(), listTaskDependencies(),
+  ]);
+  const nextMembers = {};
+  const nextProfiles = profile?.id ? { [profile.id]: profile } : {};
+  for (const project of nextProjects) {
+    const projectMembers = await listProjectMembers(project.id);
+    nextMembers[project.id] = projectMembers;
+    for (const member of projectMembers) nextProfiles[member.user_id] = member;
+  }
+  projects = nextProjects;
+  membersByProject = nextMembers;
+  members = [...new Map(Object.values(nextMembers).flat().map((member) => [member.user_id, member])).values()];
+  profileById = nextProfiles;
+  notifications = nextNotifications;
+  savedViews = nextViews;
+  dependencies = nextDependencies;
+  workspaceError = null;
+}
+
+function makeCsvCell(value) {
+  const text = String(value ?? '');
+  return '"' + text.replaceAll('"', '""') + '"';
+}
+
+function exportTasksCsv(exportRows = tasks) {
+  const columns = ['Title', 'Description', 'Project', 'Assignee', 'Status', 'Priority', 'Deadline', 'Effort hours', 'Category'];
+  const rows = exportRows.map((task) => [
+    task.title, task.description, projects.find((item) => item.id === task.project_id)?.name || 'Personal',
+    members.find((item) => item.user_id === task.assignee_id)?.full_name || members.find((item) => item.user_id === task.assignee_id)?.email || '',
+    task.status, task.priority, task.due_date, task.effort_hours, task.category,
+  ]);
+  const lines = [columns.map(makeCsvCell).join(','), ...rows.map((row) => row.map(makeCsvCell).join(','))];
+  const file = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a'); link.href = url; link.download = 'flowdesk-tasks.csv'; link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function openTaskDetail(task) {
+  if (!task) return;
+  selectedTask = task;
+  taskDiscussion = { comments: [], activity: [], dependencies: [] };
+  render();
+  try { taskDiscussion = await listTaskDiscussion(task.id); }
+  catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Task updates could not be loaded.' }; }
+  render();
+}
+
+async function handleCreateProject(formData) {
+  workspaceBusy = true; taskFeedback = null; render();
+  try {
+    await createProject(session.user.id, {
+      name: String(formData.get('name') || '').trim(),
+      description: String(formData.get('description') || '').trim(),
+    });
+    await loadWorkspaceData();
+    taskFeedback = { type: 'success', message: 'Project created.' };
+  } catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Project could not be created.' }; }
+  finally { workspaceBusy = false; render(); }
+}
+
+async function handleAddProjectMember(projectId, email) {
+  workspaceBusy = true; taskFeedback = null; render();
+  try {
+    await addProjectMember(projectId, String(email || '').trim());
+    await loadWorkspaceData();
+    taskFeedback = { type: 'success', message: 'Teammate added to the project.' };
+  } catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Teammate could not be added.' }; }
+  finally { workspaceBusy = false; render(); }
+}
+
+async function handleCapacityChange(projectId, userId, capacity) {
+  if (!Number.isFinite(capacity) || capacity < 0 || capacity > 168) return;
+  try {
+    await updateMemberCapacity(projectId, userId, capacity);
+    await loadWorkspaceData();
+  } catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Capacity could not be updated.' }; render(); }
+}
+
+async function handleSaveDependencies(taskId, dependencyIds) {
+  workspaceBusy = true; taskFeedback = null; render();
+  try {
+    await setTaskDependencies(taskId, dependencyIds);
+    taskDiscussion = await listTaskDiscussion(taskId);
+    dependencies = await listTaskDependencies();
+    taskFeedback = { type: 'success', message: 'Dependencies saved.' };
+  } catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Dependencies could not be saved.' }; }
+  finally { workspaceBusy = false; render(); }
+}
+
+async function handleAddComment(taskId, body, mentions) {
+  workspaceBusy = true; taskFeedback = null; render();
+  try {
+    await addTaskComment(taskId, body, mentions);
+    taskDiscussion = await listTaskDiscussion(taskId);
+    notifications = await listNotifications();
+    taskFeedback = { type: 'success', message: 'Comment posted.' };
+  } catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Comment could not be posted.' }; }
+  finally { workspaceBusy = false; render(); }
+}
+
+async function handleMarkNotificationRead(notificationId) {
+  try { await markNotificationRead(notificationId); notifications = await listNotifications(); }
+  catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Notification could not be updated.' }; }
+  render();
+}
+
+async function handleSaveView(name) {
+  workspaceBusy = true; taskFeedback = null; render();
+  try {
+    await persistSavedView(session.user.id, String(name || '').trim(), workspaceFilters);
+    savedViews = await listSavedViews();
+    taskFeedback = { type: 'success', message: 'View saved.' };
+  } catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'View could not be saved.' }; }
+  finally { workspaceBusy = false; render(); }
+}
+
+async function handleDeleteSavedView(viewId) {
+  try { await deleteSavedView(viewId); savedViews = await listSavedViews(); }
+  catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Saved view could not be removed.' }; }
+  render();
+}
+
+async function handleAdvancedTaskSave(formData) {
+  taskDraft = Object.fromEntries(formData.entries());
+  const dependencyIds = formData.getAll('dependencies').map(String);
+  taskFeedback = null; taskPending = true; render();
+  try {
+    const fields = taskFieldsFromForm(formData);
+    let task;
+    if (editingTaskId) task = await updateTask(editingTaskId, fields);
+    else task = await createTask(session.user.id, fields);
+    await setTaskDependencies(task.id, dependencyIds);
+    await refreshTasks();
+    await loadWorkspaceData();
+    taskFeedback = { type: 'success', message: editingTaskId ? 'Task updated.' : 'Task created.' };
+    editingTaskId = null; taskDraft = {}; workspaceEditorOpen = false;
+  } catch (error) { taskFeedback = { type: 'error', message: error instanceof Error ? error.message : 'Task could not be saved.' }; }
+  finally { taskPending = false; render(); }
 }
 
 function clearTaskFilters() {
@@ -391,8 +618,14 @@ function taskFieldsFromForm(formData) {
   if (title.length > 180) throw new Error('Task titles can be up to 180 characters.');
   if (description.length > 2000) throw new Error('Descriptions can be up to 2,000 characters.');
   if (category.length > 80) throw new Error('Categories can be up to 80 characters.');
-  if (!['todo', 'in_progress', 'done'].includes(status)) throw new Error('Choose a valid task status.');
+  const projectId = String(formData.get('project_id') || '').trim();
+  const assigneeId = String(formData.get('assignee_id') || '').trim();
+  const parentTaskId = String(formData.get('parent_task_id') || '').trim();
+  const effortHours = Number(formData.get('effort_hours') || 1);
+  const blockedReason = String(formData.get('blocked_reason') || '').trim();
+  if (!['todo', 'in_progress', 'blocked', 'done'].includes(status)) throw new Error('Choose a valid task status.');
   if (!['low', 'medium', 'high'].includes(priority)) throw new Error('Choose a valid priority.');
+  if (!Number.isFinite(effortHours) || effortHours < 0 || effortHours > 1000) throw new Error('Effort must be between 0 and 1,000 hours.');
   return {
     title,
     description,
@@ -400,6 +633,11 @@ function taskFieldsFromForm(formData) {
     status,
     priority,
     due_date: dueDate || null,
+    project_id: projectId || null,
+    assignee_id: assigneeId || null,
+    parent_task_id: parentTaskId || null,
+    effort_hours: effortHours,
+    blocked_reason: blockedReason,
     completed_at: status === 'done'
       ? (tasks.find((task) => task.id === editingTaskId)?.completed_at || new Date().toISOString())
       : null,
@@ -692,3 +930,5 @@ if (supabase) {
 } else {
   renderConfigurationError();
 }
+
+
