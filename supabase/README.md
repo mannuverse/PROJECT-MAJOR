@@ -77,5 +77,3 @@ The admin-check function is `SECURITY DEFINER` to avoid recursively invoking the
 ## Stage 2 verification boundary
 
 The schema was applied to the Supabase project on 2026-10-25. The dashboard inspection query returned `rowsecurity = true` for `profiles`, `tasks`, and `user_sessions`, and the policy query returned the expected eight policies. Those checks confirm installation, but do not simulate a regular user's access. Owner/non-owner data isolation must still be verified through authenticated sessions before treating the database security stage as fully tested.
-
-
