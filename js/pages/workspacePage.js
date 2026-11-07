@@ -15,7 +15,7 @@ function button(label, className, action, disabled = false) {
 function labeledInput(labelText, name, type, value = '', options = {}) {
   const label = el('label', 'form-field work-field');
   label.append(el('span', 'field-label', labelText));
-  const input = document.createElement(options.multiple ? 'select' : 'input');
+  const input = document.createElement(options.options ? 'select' : 'input');
   input.name = name;
   if (input instanceof HTMLInputElement) input.type = type;
   if (options.multiple) { input.multiple = true; input.size = 3; }
@@ -29,7 +29,7 @@ function labeledInput(labelText, name, type, value = '', options = {}) {
       if (options.selectedValues?.includes(key)) option.selected = true;
       input.append(option);
     }
-    input.value = value || '';
+    if (!options.multiple) input.value = value || '';
   } else if (!options.multiple) input.value = value || '';
   label.append(input); return label;
 }
@@ -371,4 +371,5 @@ export function renderWorkspacePage(props) {
   page.append(el('footer', 'workspace-footer', 'FlowDesk · Team Productivity Dashboard'));
   content.append(topbar, page); shell.append(sidebar, content); return shell;
 }
+
 
