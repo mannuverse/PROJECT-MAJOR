@@ -27,6 +27,8 @@
 
 For the existing FlowDesk project, apply `supabase/stage7_team_features.sql` and then `supabase/stage7_security_tuning.sql` after the base schema and Stage 6 email migration. Together they add projects and project memberships, task assignment/subtask/effort/blocker fields, dependencies, comments, activity, notifications, saved views, and the policies and RPCs used by the app. Run the full SQL files, not just their filenames.
 
+For an existing project that already applied Stage 7, run `supabase/stage7_fix_member_conflict_target.sql` once. It repairs the member-add RPC so project owners can add existing FlowDesk accounts by email. The corrected function is also included in `stage7_team_features.sql` for new installations.
+
 Apply both migrations **before deploying the Stage 7 frontend**. The updated task query expects the new task columns. For a fresh database, apply `schema.sql`, then both Stage 7 files in order. Internal access-check helpers are placed in a non-exposed `private` schema; the signed-in app-facing RPCs remain in `public`.
 
 Confirm that all new tables have RLS enabled:

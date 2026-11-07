@@ -110,6 +110,44 @@
 .notification-row time { color: var(--work-muted); font-size: .67rem; }
 .notification-unread { border-left: 3px solid var(--work-orange); background: #fff4ee; }
 
+/* Clear action affordance and compact, polished monthly calendar. */
+.work-task-actions { position: relative; justify-self: start; }
+.work-task-actions-toggle {
+  width: 34px;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  border-color: #dedfd8;
+  border-radius: 9px;
+  color: var(--work-ink);
+}
+.work-task-actions-toggle::after { display: none; }
+.work-task-actions-toggle:hover,
+.work-task-actions[open] .work-task-actions-toggle { border-color: #bdcfc8; background: #f1f6f3; }
+.task-options-dots { display: block; margin-top: -9px; font: 700 1.6rem/1 'DM Sans', sans-serif; letter-spacing: 1px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.field-hint { display: block; margin-top: .3rem; color: var(--work-muted); font-size: .72rem; line-height: 1.4; }
+.work-field select:disabled { cursor: not-allowed; opacity: .68; background-color: #f3f2ec; }
+.calendar-wrap { padding: 1.1rem; }
+.calendar-header { justify-content: space-between; margin-bottom: 1rem; }
+.calendar-header h2 { font-size: 1.8rem; }
+.calendar-grid { gap: 5px; border: 0; }
+.calendar-weekday { border: 0; padding: .6rem .4rem; background: transparent; text-align: left; text-transform: uppercase; letter-spacing: .08em; font-size: .67rem; }
+.calendar-cell { min-height: 108px; padding: .5rem; border: 1px solid #e8e8e1; border-radius: 10px; background: #fffefa; }
+.calendar-cell-empty { border-color: transparent; background: #f7f7f3; }
+.calendar-today { border-color: #e69a79; background: #fff7f1; box-shadow: inset 0 0 0 1px #e69a79; }
+.calendar-day-number { display: grid; width: 26px; height: 26px; place-items: center; margin-bottom: .35rem; border-radius: 50%; color: #56635d; font-size: .76rem; font-weight: 700; }
+.calendar-today .calendar-day-number { background: var(--work-orange); color: white; }
+.calendar-task { min-height: 25px; margin: .2rem 0; border-left-width: 3px; border-radius: 6px; padding: .3rem .4rem; font-size: .68rem; }
+.calendar-task-in_progress { border-left-color: var(--work-teal); background: #e9f5f2; }
+.calendar-task-blocked { border-left-color: #d46a3a; background: #fff0e8; }
+.calendar-task-done { border-left-color: #4bc58f; background: #eaf6ee; text-decoration: line-through; }
+.calendar-more { display: inline-block; margin-top: .2rem; font-size: .68rem; font-weight: 650; }
+@media (max-width: 800px) {
+  .calendar-wrap { overflow-x: auto; }
+  .calendar-grid { min-width: 690px; }
+}
+
 /* Consistent controls and denser, warmer surfaces for the expanded work views. */
 .work-field .field-label,
 .work-field > span {

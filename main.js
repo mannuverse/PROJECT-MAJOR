@@ -199,6 +199,8 @@ function render() {
         profile,
         email: session.user.email || '',
         tasks,
+        notifications,
+        notificationsOpen,
         loading: tasksLoading,
         error: tasksError,
         feedback: taskFeedback,
@@ -217,6 +219,9 @@ function render() {
         onFiltersChange: handleFiltersChange,
         onClearFilters: clearTaskFilters,
         onNavigate: handleNavigate,
+        onToggleNotifications: () => { notificationsOpen = !notificationsOpen; render(); },
+        onMarkRead: handleMarkNotificationRead,
+        onOpenTask: (task) => { notificationsOpen = false; currentView = 'tasks'; if (task) void openTaskDetail(task); else render(); },
       };
     if (currentView === 'admin' && profile.role === 'admin') {
       replaceAppContent(renderAdminPage({
@@ -230,11 +235,15 @@ function render() {
         pending: pending || taskPending,
         tab: adminTab,
         filters: adminFilters,
+        tasks, notifications, notificationsOpen,
         onNavigate: handleNavigate,
         onSignOut: handleSignOut,
         onRetry: () => void loadAdminData(),
         onTabChange: handleAdminTabChange,
         onFiltersChange: handleAdminFiltersChange,
+        onToggleNotifications: () => { notificationsOpen = !notificationsOpen; render(); },
+        onMarkRead: handleMarkNotificationRead,
+        onOpenTask: (task) => { notificationsOpen = false; currentView = 'tasks'; if (task) void openTaskDetail(task); else render(); },
       }));
     } else if (currentView === 'overview') {
       replaceAppContent(renderDashboardPage({ ...pageProps, onRetry: () => void loadTasks() }));
@@ -395,6 +404,7 @@ function handleFiltersChange(nextFilters) {
 }
 
 function handleNavigate(view) {
+  notificationsOpen = false;
   if (view === 'admin') {
     if (profile?.role !== 'admin') {
       currentView = 'overview';
@@ -413,6 +423,10 @@ function handleNavigate(view) {
     taskDraft = {};
     taskFeedback = null;
     workspaceEditorOpen = true;
+  } else {
+    workspaceEditorOpen = false;
+    editingTaskId = null;
+    taskDraft = {};
   }
   render();
   if (view === 'create') document.querySelector('[data-focus-key="task-title"]')?.focus();

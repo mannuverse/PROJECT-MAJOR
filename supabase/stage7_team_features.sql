@@ -161,8 +161,11 @@ begin
     raise exception 'No FlowDesk account uses that email address';
   end if;
   insert into public.project_members(project_id, user_id)
-  values (p_project_id, v_user_id) on conflict (project_id, user_id) do nothing;
-  return query select * from public.list_project_members(p_project_id) m where m.user_id = v_user_id;
+  values (p_project_id, v_user_id) on conflict on constraint project_members_pkey do nothing;
+  return query
+    select m.user_id, m.full_name, m.email, m.member_role, m.capacity_hours
+    from public.list_project_members(p_project_id) as m
+    where m.user_id = v_user_id;
 end;
 $$;
 

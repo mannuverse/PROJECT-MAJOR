@@ -69,8 +69,13 @@ function taskCard(task, props) {
   if (task.description) card.append(el('p', 'work-task-description', task.description));
   card.append(meta, details);
   const actions = el('details', 'work-task-actions');
-  actions.append(el('summary', 'work-task-actions-toggle', 'Task options'));
+  const optionsToggle = el('summary', 'work-task-actions-toggle');
+  optionsToggle.setAttribute('aria-label', 'Task options');
+  optionsToggle.title = 'Task options';
+  optionsToggle.append(el('span', 'sr-only', 'Task options'), el('span', 'task-options-dots', '⋯'));
+  actions.append(optionsToggle);
   const actionMenu = el('div', 'work-task-action-menu');
+  actionMenu.append(button('Edit task', 'button button-secondary button-small', () => props.onEditTask(task), props.pending));
   actionMenu.append(button('Details', 'button button-secondary button-small', () => props.onOpenTask(task), props.pending));
   actionMenu.append(button(task.status === 'done' ? 'Reopen' : 'Complete', 'button button-secondary button-small', () => props.onToggleComplete(task), props.pending));
   actionMenu.append(button('Delete', 'button button-danger button-small', () => props.onDelete(task), props.pending));
@@ -89,6 +94,8 @@ function taskEditor(props) {
   form.append(labeledInput('Title', 'title', 'text', props.formValues.title ?? props.editingTask?.title, { required: true, maxLength: 180, placeholder: 'What needs to get done?', focusKey: 'task-title' }));
   const projectField = labeledInput('Project', 'project_id', 'text', props.formValues.project_id ?? props.editingTask?.project_id, { options: [['', 'Personal task'], ...props.projects.map((project) => [project.id, project.name])] });
   const assigneeField = labeledInput('Assignee', 'assignee_id', 'text', props.formValues.assignee_id ?? props.editingTask?.assignee_id, { options: [['', 'Unassigned'], ...props.members.map((member) => [member.user_id, member.full_name || member.email])] });
+  const assigneeHint = el('span', 'field-hint', 'Choose a project first to assign a teammate.');
+  assigneeField.append(assigneeHint);
   const parentField = labeledInput('Parent task', 'parent_task_id', 'text', props.formValues.parent_task_id ?? props.editingTask?.parent_task_id, { options: [['', 'No parent'], ...props.tasks.filter((task) => task.id !== props.editingTask?.id && task.project_id === (props.formValues.project_id ?? props.editingTask?.project_id ?? null)).map((task) => [task.id, task.title])] });
   projectField.querySelector('select').addEventListener('change', (event) => {
     const projectId = event.currentTarget.value;
@@ -99,6 +106,12 @@ function taskEditor(props) {
     assignee.firstChild.value = '';
     for (const member of availableMembers) { const option = el('option', '', member.full_name || member.email); option.value = member.user_id; assignee.append(option); }
     if (availableMembers.some((member) => member.user_id === oldAssignee)) assignee.value = oldAssignee;
+    assignee.disabled = !projectId || availableMembers.length === 0;
+    assigneeHint.textContent = !projectId
+      ? 'Choose a project first to assign a teammate.'
+      : availableMembers.length
+        ? 'Select a member of this project.'
+        : 'No project members yet. Add a teammate from Projects.';
     const availableParents = props.tasks.filter((task) => task.id !== props.editingTask?.id && task.project_id === (projectId || null));
     parent.replaceChildren(el('option', '', 'No parent')); parent.firstChild.value = '';
     for (const task of availableParents) { const option = el('option', '', task.title); option.value = task.id; parent.append(option); }
@@ -117,10 +130,10 @@ function taskEditor(props) {
   const description = labeledInput('Description', 'description', 'text', props.formValues.description ?? props.editingTask?.description ?? '', { placeholder: 'Add useful context.', maxLength: 2000 });
   const descriptionArea = document.createElement('textarea'); descriptionArea.name = 'description'; descriptionArea.rows = 3; descriptionArea.maxLength = 2000; descriptionArea.value = props.formValues.description ?? props.editingTask?.description ?? ''; descriptionArea.placeholder = 'Add useful context.'; description.replaceChildren(el('span', 'field-label', 'Description'), descriptionArea); form.append(description);
   const blocked = document.createElement('textarea'); blocked.name = 'blocked_reason'; blocked.rows = 2; blocked.maxLength = 500; blocked.value = props.formValues.blocked_reason ?? props.editingTask?.blocked_reason ?? ''; blocked.placeholder = 'Why is this blocked?';
-  const blockedLabel = el('label', 'form-field work-field'); blockedLabel.append(el('span', 'field-label', 'Blocker (optional)'), blocked); form.append(blockedLabel);
+  const blockedLabel = el('label', 'form-field work-field'); blockedLabel.append(el('span', 'field-label', 'Blocker details'), blocked, el('span', 'field-hint', 'Set Status to “Blocked” above, then explain what is stopping the task here.')); form.append(blockedLabel);
   const actions = el('div', 'task-form-actions work-form-actions');
   const save = el('button', 'button button-primary', props.pending ? 'Saving…' : (props.editingTask ? 'Save changes' : 'Create task')); save.type = 'submit'; save.disabled = props.pending; actions.append(save);
-  if (props.editingTask) actions.append(button('Cancel', 'button button-secondary', props.onCancelEdit, props.pending));
+  actions.append(button('Cancel', 'button button-secondary', props.onCancelEdit, props.pending));
   form.append(actions); panel.append(form); return panel;
 }
 
@@ -176,16 +189,22 @@ function calendarView(items, props) {
   for (const weekday of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) grid.append(el('div', 'calendar-weekday', weekday));
   const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
   const days = new Date(year, month + 1, 0).getDate();
-  for (let blank = 0; blank < firstDay; blank++) grid.append(el('div', 'calendar-cell calendar-cell-empty'));
+  for (let blank = 0; blank < firstDay; blank++) { const cell = el('div', 'calendar-cell calendar-cell-empty'); cell.setAttribute('aria-hidden', 'true'); grid.append(cell); }
   for (let day = 1; day <= days; day++) {
     const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const cell = el('div', 'calendar-cell' + (date === localDate() ? ' calendar-today' : ''));
-    cell.append(el('span', 'calendar-day-number', String(day)));
-    for (const task of items.filter((item) => item.due_date === date).slice(0, 3)) cell.append(button(task.title, 'calendar-task', () => props.onOpenTask(task)));
-    const more = items.filter((item) => item.due_date === date).length - 3;
+    const dayNumber = el('span', 'calendar-day-number', String(day));
+    if (date === localDate()) dayNumber.setAttribute('aria-label', `Today, ${day}`);
+    cell.append(dayNumber);
+    const dayTasks = items.filter((item) => item.due_date === date);
+    for (const task of dayTasks.slice(0, 3)) cell.append(button(task.title, `calendar-task calendar-task-${task.status}`, () => props.onOpenTask(task)));
+    const more = dayTasks.length - 3;
     if (more > 0) cell.append(el('span', 'calendar-more', `+${more} more`));
     grid.append(cell);
   }
+  const totalCells = firstDay + days;
+  const trailing = (7 - totalCells % 7) % 7;
+  for (let blank = 0; blank < trailing; blank++) { const cell = el('div', 'calendar-cell calendar-cell-empty'); cell.setAttribute('aria-hidden', 'true'); grid.append(cell); }
   const wrap = el('section', 'surface calendar-wrap'); wrap.append(header, grid); return wrap;
 }
 
@@ -338,7 +357,9 @@ export function renderWorkspacePage(props) {
   const names = { tasks: ['YOUR WORK', 'All tasks'], board: ['TEAM FLOW', 'Kanban board'], calendar: ['PLAN AHEAD', 'Calendar'], 'my-work': ['PERSONAL FOCUS', 'My Work'], projects: ['TEAM SPACE', 'Projects & workload'], reports: ['INSIGHTS', 'Reports'] };
   const [kicker, title] = names[props.view] || names.tasks;
   const heading = el('div', 'page-heading'); const intro = el('div', 'page-heading-copy'); intro.append(el('p', 'eyebrow', `FLOWDESK · ${kicker}`), el('h1', 'page-title', title), el('p', 'page-description', 'Plan together, keep ownership clear, and see what is moving.'));
-  heading.append(intro, button('＋ New task', 'button button-primary', props.onNewTask, props.pending)); page.append(heading);
+  heading.append(intro);
+  if (props.view === 'tasks') heading.append(button('＋ New task', 'button button-primary', props.onNewTask, props.pending));
+  page.append(heading);
   if (props.feedback) { const notice = el('p', `feedback ${props.feedback.type === 'error' ? 'feedback-error' : 'feedback-success'}`, props.feedback.message); notice.setAttribute('role', props.feedback.type === 'error' ? 'alert' : 'status'); page.append(notice); }
   if (props.activityNotice) page.append(el('p', 'activity-notice', props.activityNotice));
   if (props.workspaceError) { const error = el('p', 'feedback feedback-error', `Team features need the Stage 7 Supabase migration. ${props.workspaceError}`); error.setAttribute('role', 'alert'); page.append(error); }
@@ -354,11 +375,11 @@ export function renderWorkspacePage(props) {
     }
     page.append(notices);
   }
+  if (props.view === 'tasks' && props.showEditor) page.append(taskEditor(props));
   if (props.view === 'projects') page.append(projectPanel(props));
   else if (props.view === 'reports') page.append(reportsPanel(props, props.visibleTasks));
   else {
     page.append(filtersToolbar(props));
-    if (props.showEditor) page.append(taskEditor(props));
     if (props.loading) page.append(el('p', 'list-state', 'Loading your tasks…'));
     else if (props.error) {
       const error = el('section', 'surface list-state list-state-error');
@@ -371,5 +392,4 @@ export function renderWorkspacePage(props) {
   page.append(el('footer', 'workspace-footer', 'FlowDesk · Team Productivity Dashboard'));
   content.append(topbar, page); shell.append(sidebar, content); return shell;
 }
-
 

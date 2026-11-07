@@ -66,7 +66,8 @@ function renderTaskGroup({ title, kicker, tasks, emptyMessage }) {
 }
 
 export function renderDashboardPage({
-  profile, email, tasks, loading, error, feedback, activityNotice, pending, onNavigate, onSignOut, onRetry,
+  profile, email, tasks, notifications = [], notificationsOpen = false, loading, error, feedback, activityNotice, pending,
+  onNavigate, onSignOut, onRetry, onToggleNotifications = () => {}, onMarkRead = () => {}, onOpenTask = () => {},
 }) {
   const shell = element('div', 'workspace-shell');
   const sidebar = element('aside', 'workspace-sidebar');
@@ -90,6 +91,8 @@ export function renderDashboardPage({
   if (profile.role === 'admin') {
     nav.append(makeButton('Admin', 'workspace-nav-item', () => onNavigate('admin'), pending));
   }
+  const unread = notifications.filter((notification) => !notification.read_at).length;
+  nav.append(makeButton(`Notifications${unread ? ` · ${unread}` : ''}`, 'workspace-nav-item', onToggleNotifications, pending));
   menu.append(nav);
   sidebar.append(menu, element('p', 'sidebar-note', 'A clear view of your personal work.'));
 
@@ -119,6 +122,20 @@ export function renderDashboardPage({
   );
   heading.append(intro, makeButton('＋  Create a task', 'button button-primary quick-create-button', () => onNavigate('create'), pending));
   page.append(heading);
+
+  if (notificationsOpen) {
+    const notices = element('section', 'surface notifications-panel');
+    notices.append(element('h2', 'section-title', 'Notifications'));
+    if (!notifications.length) notices.append(element('p', 'dashboard-empty-note', 'You are all caught up.'));
+    for (const notification of notifications) {
+      const row = element('article', 'notification-row' + (notification.read_at ? '' : ' notification-unread'));
+      row.append(element('p', '', notification.message), element('time', '', new Date(notification.created_at).toLocaleString()));
+      if (!notification.read_at) row.append(makeButton('Mark read', 'text-button', () => onMarkRead(notification.id)));
+      if (notification.task_id) row.append(makeButton('Open task', 'button button-secondary button-small', () => onOpenTask(tasks.find((task) => task.id === notification.task_id))));
+      notices.append(row);
+    }
+    page.append(notices);
+  }
 
   if (feedback) {
     const notice = element('p', 'feedback ' + (feedback.type === 'error' ? 'feedback-error' : 'feedback-success'), feedback.message);

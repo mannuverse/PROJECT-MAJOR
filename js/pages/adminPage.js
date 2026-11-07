@@ -178,7 +178,9 @@ function renderPager(page, totalPages, onPageChange) {
 
 export function renderAdminPage({
   profile, email, data, loading, error, feedback, activityNotice, pending, tab, filters,
+  tasks = [], notifications = [], notificationsOpen = false,
   onNavigate, onSignOut, onRetry, onTabChange, onFiltersChange,
+  onToggleNotifications = () => {}, onMarkRead = () => {}, onOpenTask = () => {},
 }) {
   const shell = element('div', 'workspace-shell');
   const sidebar = element('aside', 'workspace-sidebar');
@@ -196,6 +198,8 @@ export function renderAdminPage({
   const adminNav = button('Admin', 'workspace-nav-item workspace-nav-active', () => onNavigate('admin'), pending);
   adminNav.setAttribute('aria-current', 'page');
   nav.append(adminNav);
+  const unreadCount = notifications.filter((notification) => !notification.read_at).length;
+  nav.append(button(`Notifications${unreadCount ? ` · ${unreadCount}` : ''}`, 'workspace-nav-item' + (notificationsOpen ? ' workspace-nav-active' : ''), onToggleNotifications, pending));
   menu.append(nav);
   sidebar.append(menu, element('p', 'sidebar-note', 'Read-only administration and session history.'));
 
@@ -225,6 +229,20 @@ export function renderAdminPage({
   );
   heading.append(intro, button('Refresh data', 'button button-secondary', onRetry, pending));
   page.append(heading);
+
+  if (notificationsOpen) {
+    const notices = element('section', 'surface notifications-panel');
+    notices.append(element('h2', 'section-title', 'Notifications'));
+    if (!notifications.length) notices.append(element('p', 'dashboard-empty-note', 'You are all caught up.'));
+    for (const notification of notifications) {
+      const row = element('article', 'notification-row' + (notification.read_at ? '' : ' notification-unread'));
+      row.append(element('p', '', notification.message), element('time', '', new Date(notification.created_at).toLocaleString()));
+      if (!notification.read_at) row.append(button('Mark read', 'text-button', () => onMarkRead(notification.id)));
+      if (notification.task_id) row.append(button('Open task', 'button button-secondary button-small', () => onOpenTask(tasks.find((task) => task.id === notification.task_id))));
+      notices.append(row);
+    }
+    page.append(notices);
+  }
 
   if (activityNotice) {
     const notice = element('p', 'activity-notice', activityNotice);
